@@ -10,7 +10,10 @@
   "scripts": {
     "build": "tsc",
     "test": "tsx --test test/**/*.test.ts",
-    "dev": "tsx --watch example/server.ts",
+    "dev": "tsx --watch test/**/*.test.ts",
+    "mqtt:start": "docker compose up -d",
+    "mqtt:stop": "docker compose down",
+    "mqtt:logs": "docker compose logs -f mosquitto",
     "prepublishOnly": "pnpm build"
   },
   "keywords": [],
