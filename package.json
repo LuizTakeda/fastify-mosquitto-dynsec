@@ -9,12 +9,18 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.17.0",
-      "onFail": "download"
-    }
+  "type": "module",
+  "dependencies": {
+    "fastify-plugin": "^6.0.0",
+    "mqtt": "^5.16.0"
   },
-  "type": "module"
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "fastify": "^5.12.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "fastify": "^5.12.5"
+  }
 }
