@@ -2,9 +2,16 @@
   "name": "fastify-mosquito-dynsec",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "tsx --test test/**/*.test.ts",
+    "dev": "tsx --watch example/server.ts",
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [],
   "author": "",
