@@ -4,6 +4,7 @@ import mqtt, { MqttClient } from "mqtt"
 import { TaskQueue } from "./task-queue.js";
 import { createRoleAPI } from "./role.js";
 import { createGroupAPI } from "./group.js";
+import { createClientAPI } from "./client.js";
 
 export { DynsecError } from "./errors.js";
 
@@ -16,6 +17,7 @@ type DynsecAPI = {
   sendCommands: SendCommandsFunction;
   role: ReturnType<typeof createRoleAPI>;
   group: ReturnType<typeof createGroupAPI>;
+  client: ReturnType<typeof createClientAPI>;
 };
 
 type MosquittoDynsecPluginOptions = {
@@ -120,6 +122,7 @@ const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify,
     sendCommands,
     role: createRoleAPI(sendCommands),
     group: createGroupAPI(sendCommands),
+    client: createClientAPI(sendCommands),
   };
 
   fastify.decorate("dynsec", dynsec)
