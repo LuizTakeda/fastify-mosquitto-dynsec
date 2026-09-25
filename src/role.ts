@@ -75,6 +75,9 @@ export interface ListRolesData {
 }
 
 export function createRoleAPI(sendCommands: SendCommandsFunction) {
+  /**
+   * Creates a new role on the Mosquitto broker.
+   */
   const create = async (payload: CreateRolePayload): Promise<void> => {
     const response = await sendCommands<DynSecCommandResponse>({
       commands: [{ command: "createRole", ...payload }],
@@ -82,6 +85,9 @@ export function createRoleAPI(sendCommands: SendCommandsFunction) {
     handleResponse(response, "createRole");
   };
 
+  /**
+   * Retrieves role details and its ACL rules.
+   */
   const get = async (payload: GetRolePayload): Promise<RoleDetails> => {
     const response = await sendCommands<DynSecCommandResponse<GetRoleData>>({
       commands: [{ command: "getRole", rolename: payload.rolename }],
@@ -90,6 +96,9 @@ export function createRoleAPI(sendCommands: SendCommandsFunction) {
     return data.role;
   };
 
+  /**
+   * Lists roles defined on the broker.
+   */
   const list = async (payload?: ListRolesPayload): Promise<ListRolesData> => {
     const response = await sendCommands<DynSecCommandResponse<ListRolesData>>({
       commands: [
@@ -104,6 +113,9 @@ export function createRoleAPI(sendCommands: SendCommandsFunction) {
     return handleResponse(response, "listRoles");
   };
 
+  /**
+   * Modifies an existing role.
+   */
   const modify = async (payload: ModifyRolePayload): Promise<void> => {
     const response = await sendCommands<DynSecCommandResponse>({
       commands: [{ command: "modifyRole", ...payload }],
@@ -111,6 +123,9 @@ export function createRoleAPI(sendCommands: SendCommandsFunction) {
     handleResponse(response, "modifyRole");
   };
 
+  /**
+   * Deletes a role from the broker.
+   */
   const remove = async (payload: RemoveRolePayload): Promise<void> => {
     const response = await sendCommands<DynSecCommandResponse>({
       commands: [{ command: "deleteRole", rolename: payload.rolename }],
@@ -118,6 +133,9 @@ export function createRoleAPI(sendCommands: SendCommandsFunction) {
     handleResponse(response, "deleteRole");
   };
 
+  /**
+   * Adds an ACL rule to a role.
+   */
   const addACL = async (payload: AddRoleACLPayload): Promise<void> => {
     const response = await sendCommands<DynSecCommandResponse>({
       commands: [{ command: "addRoleACL", ...payload }],
@@ -125,6 +143,9 @@ export function createRoleAPI(sendCommands: SendCommandsFunction) {
     handleResponse(response, "addRoleACL");
   };
 
+  /**
+   * Removes an ACL rule from a role.
+   */
   const removeACL = async (payload: RemoveRoleACLPayload): Promise<void> => {
     const response = await sendCommands<DynSecCommandResponse>({
       commands: [
