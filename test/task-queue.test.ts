@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { TaskQueue } from '../src/task-queue.js';
 
-test('TaskQueue', { concurrency: 1 }, async (t) => {
+test('task-queue', { concurrency: 1 }, async (t) => {
 
   await t.test('should execute tasks in sequential FIFO order', async () => {
     const queue = new TaskQueue();
