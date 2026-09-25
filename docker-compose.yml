@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mosquitto:
     image: eclipse-mosquitto:2.0
@@ -10,3 +8,8 @@ services:
       MOSQUITTO_DYNSEC_PASSWORD: admin123456789
     volumes:
       - ./mosquitto/config:/mosquitto/config:ro
+    command: >
+      sh -c "if [ ! -f /mosquitto/data/dynamic-security.json ]; then
+               mosquitto_ctrl dynsec init /mosquitto/data/dynamic-security.json admin $${MOSQUITTO_DYNSEC_PASSWORD:-admin123456789};
+             fi &&
+             /docker-entrypoint.sh /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf"
