@@ -5,6 +5,7 @@ import { TaskQueue } from "./task-queue.js";
 import { createRoleAPI } from "./role.js";
 import { createGroupAPI } from "./group.js";
 import { createClientAPI } from "./client.js";
+import { createAclAPI } from "./acl.js";
 
 export { DynsecError } from "./errors.js";
 
@@ -18,6 +19,7 @@ type DynsecAPI = {
   role: ReturnType<typeof createRoleAPI>;
   group: ReturnType<typeof createGroupAPI>;
   client: ReturnType<typeof createClientAPI>;
+  acl: ReturnType<typeof createAclAPI>;
 };
 
 type MosquittoDynsecPluginOptions = {
@@ -123,6 +125,7 @@ const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify,
     role: createRoleAPI(sendCommands),
     group: createGroupAPI(sendCommands),
     client: createClientAPI(sendCommands),
+    acl: createAclAPI(sendCommands),
   };
 
   fastify.decorate("dynsec", dynsec)
