@@ -1,7 +1,17 @@
 {
-  "name": "fastify-mosquito-dynsec",
+  "name": "fastify-mosquitto-dynsec",
   "version": "1.0.0",
-  "description": "",
+  "description": "Fastify plugin for Mosquitto Dynamic Security (DynSec v1) management",
+  "keywords": [
+    "fastify",
+    "fastify-plugin",
+    "mqtt",
+    "mosquitto",
+    "dynsec",
+    "dynamic-security",
+    "iot",
+    "access-control"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -15,7 +25,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "build": "pnpm clean && tsc -p tsconfig.build.json",
     "test": "tsx --test --test-concurrency=1 test/**/*.test.ts",
     "dev": "tsx --watch example/server.ts",
     "mqtt:start": "docker compose up -d",
@@ -23,8 +34,11 @@
     "mqtt:logs": "docker compose logs -f mosquitto",
     "prepublishOnly": "pnpm build"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Luiz Takeda",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuizTakeda/fastify-mosquitto-dynsec.git"
+  },
   "license": "MIT",
   "type": "module",
   "dependencies": {
