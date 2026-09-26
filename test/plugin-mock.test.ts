@@ -204,4 +204,103 @@ test("plugin-mock", { concurrency: 1 }, async (t) => {
 
     assert.strictEqual(endCalled, false, "External client should not be closed by the plugin");
   });
+
+  await t.test("should wait for connect event when failFast is true and client is not yet connected", async () => {
+    const app = Fastify();
+    const mockClient = createMockMqttClient({ connected: false });
+
+    const originalOnce = mockClient.once.bind(mockClient);
+    mockClient.once = ((event: any, listener: any) => {
+      if (event === "connect") {
+        setImmediate(() => {
+          mockClient.connected = true;
+          listener();
+        });
+      }
+      return (originalOnce as any)(event, listener);
+    }) as any;
+
+    await app.register(dynsecPlugin, {
+      url: "mqtt://localhost:1883",
+      mqttClient: mockClient,
+      failFast: true,
+    });
+
+    await app.ready();
+    assert.strictEqual(mockClient.connected, true);
+    await app.close();
+  });
+
+  await t.test("should reject app.ready() when failFast is true and client emits error", async () => {
+    const app = Fastify();
+    const mockClient = createMockMqttClient({ connected: false });
+
+    const originalOnce = mockClient.once.bind(mockClient);
+    mockClient.once = ((event: any, listener: any) => {
+      if (event === "error") {
+        setImmediate(() => {
+          listener(new Error("Connection failed"));
+        });
+      }
+      return (originalOnce as any)(event, listener);
+    }) as any;
+
+    await assert.rejects(
+      async () => {
+        await app.register(dynsecPlugin, {
+          url: "mqtt://localhost:1883",
+          mqttClient: mockClient,
+          failFast: true,
+        });
+        await app.ready();
+      },
+      {
+        name: "Error",
+        message: "Connection failed",
+      }
+    );
+
+    await app.close();
+  });
+
+  await t.test("should ignore messages received on unrelated topics", async () => {
+    const app = Fastify();
+    const mockClient = createMockMqttClient();
+
+    mockClient.publish = ((_topic: string, _payload: string, cb?: (err?: Error) => void) => {
+      setImmediate(() => {
+        // Emit unrelated message first (should be ignored)
+        mockClient.emit("message", "some/other/topic", Buffer.from(JSON.stringify({ ignored: true })), {} as any);
+
+        // Then emit actual dynsec response
+        const fakeDynSecResponse = {
+          responses: [{ command: "listRoles", data: { roles: ["admin"] } }],
+        };
+        mockClient.emit(
+          "message",
+          "$CONTROL/dynamic-security/v1/response",
+          Buffer.from(JSON.stringify(fakeDynSecResponse)),
+          {} as any
+        );
+      });
+      if (cb) cb();
+      return mockClient;
+    }) as any;
+
+    await app.register(dynsecPlugin, {
+      url: "mqtt://localhost:1883",
+      mqttClient: mockClient,
+    });
+    await app.ready();
+
+    const response = await app.dynsec.sendCommands<{ responses: Array<{ command: string; data: unknown }> }>({
+      commands: [{ command: "listRoles" }],
+    });
+
+    assert.deepStrictEqual(response, {
+      responses: [{ command: "listRoles", data: { roles: ["admin"] } }],
+    });
+
+    await app.close();
+  });
 });
