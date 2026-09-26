@@ -30,11 +30,29 @@ test("client-broker", { concurrency: 1 }, async (t) => {
       );
     });
 
-    await t.test("should execute full client lifecycle (create, addRole, addToGroup, modify, setId, setPassword, disable, enable, removeRole, removeFromGroup, remove)", async () => {
+    await t.test("should execute full client lifecycle (create, addRole, addToGroup, modify, setId, setPassword, disable, enable, removeRole, removeFromGroup, remove)", async (subtest) => {
       const timestamp = Date.now();
       const username = `client-${timestamp}`;
       const roleName = `cli-role-${timestamp}`;
       const groupName = `cli-group-${timestamp}`;
+
+      subtest.after(async () => {
+        try {
+          await app.dynsec.client.remove({ username });
+        } catch {
+          // ignore if already deleted
+        }
+        try {
+          await app.dynsec.group.remove({ groupname: groupName });
+        } catch {
+          // ignore if already deleted
+        }
+        try {
+          await app.dynsec.role.remove({ rolename: roleName });
+        } catch {
+          // ignore if already deleted
+        }
+      });
 
       // 1. Create helper role and group
       await app.dynsec.role.create({ rolename: roleName });
