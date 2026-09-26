@@ -30,8 +30,16 @@ test("role-broker", { concurrency: 1 }, async (t) => {
       );
     });
 
-    await t.test("should execute full role lifecycle (create, addACL, get, modify, removeACL, remove)", async () => {
+    await t.test("should execute full role lifecycle (create, addACL, get, modify, removeACL, remove)", async (subtest) => {
       const roleName = `role-${Date.now()}`;
+
+      subtest.after(async () => {
+        try {
+          await app.dynsec.role.remove({ rolename: roleName });
+        } catch {
+          // ignore if already deleted
+        }
+      });
 
       // 1. Create role
       await app.dynsec.role.create({

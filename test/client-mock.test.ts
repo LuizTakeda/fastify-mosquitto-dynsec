@@ -279,6 +279,32 @@ test("client-mock", { concurrency: 1 }, async (t) => {
     });
   });
 
+  await t.test("setId() should default clientid to empty string when not provided", async () => {
+    let capturedCommands: any = null;
+
+    const mockSendCommands = createMockSender((commands) => {
+      capturedCommands = commands;
+      return {
+        responses: [{ command: "setClientId" }],
+      };
+    });
+
+    const clientAPI = createClientAPI(mockSendCommands);
+    await clientAPI.setId({
+      username: "sensor-node",
+    });
+
+    assert.deepStrictEqual(capturedCommands, {
+      commands: [
+        {
+          command: "setClientId",
+          username: "sensor-node",
+          clientid: "",
+        },
+      ],
+    });
+  });
+
   await t.test("setPassword() should dispatch setClientPassword command", async () => {
     let capturedCommands: any = null;
 

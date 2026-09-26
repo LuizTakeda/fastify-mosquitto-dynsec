@@ -38,9 +38,20 @@ test("acl-broker", { concurrency: 1 }, async (t) => {
 
     await t.test(
       "setDefaultAccess() should update default ACLs and restore them cleanly",
-      async () => {
+      async (subtest) => {
         // 1. Read current initial ACLs
         const initialAcls = await app.dynsec.acl.getDefaultAccess();
+
+        // Ensure original ACLs are always restored even if an assertion fails
+        subtest.after(async () => {
+          try {
+            await app.dynsec.acl.setDefaultAccess({
+              acls: initialAcls.map((r) => ({ acltype: r.acltype, allow: r.allow })),
+            });
+          } catch {
+            // ignore if already restored
+          }
+        });
 
         // 2. Flip subscribe permission
         const currentSubscribe = initialAcls.find(

@@ -31,7 +31,7 @@ test("plugin-broker", { concurrency: 1 }, async (t) => {
     await app.close();
   });
 
-  await t.test("should connect to real broker and execute DynSec commands", async () => {
+  await t.test("should connect to real broker and execute DynSec commands", async (subtest) => {
     const app = Fastify();
 
     await app.register(dynsecPlugin, {
@@ -65,6 +65,17 @@ test("plugin-broker", { concurrency: 1 }, async (t) => {
 
       // 2. Create a test role
       const testRoleName = `test-role-${Date.now()}`;
+
+      subtest.after(async () => {
+        try {
+          await app.dynsec.sendCommands({
+            commands: [{ command: "deleteRole", rolename: testRoleName }],
+          });
+        } catch {
+          // ignore if already deleted
+        }
+      });
+
       const createRes = await app.dynsec.sendCommands<{
         responses: Array<{ command: string; error?: string }>;
       }>({
@@ -102,7 +113,7 @@ test("plugin-broker", { concurrency: 1 }, async (t) => {
     }
   });
 
-  await t.test("should process concurrent commands sequentially without response collision", async () => {
+  await t.test("should process concurrent commands sequentially without response collision", async (subtest) => {
     const app = Fastify();
 
     await app.register(dynsecPlugin, {
@@ -119,6 +130,14 @@ test("plugin-broker", { concurrency: 1 }, async (t) => {
       const role1 = `concurrent-role-1-${timestamp}`;
       const role2 = `concurrent-role-2-${timestamp}`;
       const role3 = `concurrent-role-3-${timestamp}`;
+
+      subtest.after(async () => {
+        await Promise.allSettled([
+          app.dynsec.sendCommands({ commands: [{ command: "deleteRole", rolename: role1 }] }),
+          app.dynsec.sendCommands({ commands: [{ command: "deleteRole", rolename: role2 }] }),
+          app.dynsec.sendCommands({ commands: [{ command: "deleteRole", rolename: role3 }] }),
+        ]);
+      });
 
       // Dispatch 3 commands concurrently through the plugin queue
       const [res1, res2, res3] = await Promise.all([

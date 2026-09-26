@@ -48,6 +48,12 @@ const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify,
       resubscribe: true
     });
 
+  fastify.addHook('onClose', async () => {
+    if (!options.mqttClient) {
+      await mqttClient.endAsync();
+    }
+  });
+
   mqttClient.on("connect", () => {
     logger.info("connected to MQTT broker");
 
@@ -129,12 +135,6 @@ const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify,
   };
 
   fastify.decorate("dynsec", dynsec)
-
-  fastify.addHook('onClose', async () => {
-    if (!options.mqttClient) {
-      await mqttClient.endAsync();
-    }
-  });
 }
 
 export default fp(plugin, {

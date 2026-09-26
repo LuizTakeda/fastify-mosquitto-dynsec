@@ -32,10 +32,23 @@ test("group-broker", { concurrency: 1 }, async (t) => {
       assert.ok(typeof result.groupname === "string");
     });
 
-    await t.test("should execute full group lifecycle (create, addRole, get, modify, removeRole, remove)", async () => {
+    await t.test("should execute full group lifecycle (create, addRole, get, modify, removeRole, remove)", async (subtest) => {
       const timestamp = Date.now();
       const groupName = `group-${timestamp}`;
       const roleName = `grp-role-${timestamp}`;
+
+      subtest.after(async () => {
+        try {
+          await app.dynsec.group.remove({ groupname: groupName });
+        } catch {
+          // ignore if already deleted
+        }
+        try {
+          await app.dynsec.role.remove({ rolename: roleName });
+        } catch {
+          // ignore if already deleted
+        }
+      });
 
       // 1. Create a helper role to associate with the group
       await app.dynsec.role.create({ rolename: roleName });
@@ -101,25 +114,29 @@ test("group-broker", { concurrency: 1 }, async (t) => {
       );
     });
 
-    await t.test("create() should throw DynsecError when attempting to create a duplicate group", async () => {
+    await t.test("create() should throw DynsecError when attempting to create a duplicate group", async (subtest) => {
       const groupName = `dup-group-${Date.now()}`;
+
+      subtest.after(async () => {
+        try {
+          await app.dynsec.group.remove({ groupname: groupName });
+        } catch {
+          // ignore if already deleted
+        }
+      });
 
       await app.dynsec.group.create({ groupname: groupName });
 
-      try {
-        await assert.rejects(
-          async () => {
-            await app.dynsec.group.create({ groupname: groupName });
-          },
-          (err: any) => {
-            assert.ok(err instanceof DynsecError);
-            assert.strictEqual(err.command, "createGroup");
-            return true;
-          }
-        );
-      } finally {
-        await app.dynsec.group.remove({ groupname: groupName });
-      }
+      await assert.rejects(
+        async () => {
+          await app.dynsec.group.create({ groupname: groupName });
+        },
+        (err: any) => {
+          assert.ok(err instanceof DynsecError);
+          assert.strictEqual(err.command, "createGroup");
+          return true;
+        }
+      );
     });
   } finally {
     await app.close();
