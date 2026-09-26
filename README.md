@@ -1,5 +1,10 @@
 # fastify-mosquitto-dynsec
 
+[![npm version](https://img.shields.io/npm/v/fastify-mosquitto-dynsec.svg?style=flat)](https://www.npmjs.com/package/fastify-mosquitto-dynsec)
+[![npm downloads](https://img.shields.io/npm/dm/fastify-mosquitto-dynsec.svg?style=flat)](https://www.npmjs.com/package/fastify-mosquitto-dynsec)
+[![CI Tests](https://github.com/LuizTakeda/fastify-mosquitto-dynsec/actions/workflows/test.yml/badge.svg)](https://github.com/LuizTakeda/fastify-mosquitto-dynsec/actions)
+[![license](https://img.shields.io/github/license/LuizTakeda/fastify-mosquitto-dynsec.svg?style=flat)](./LICENSE)
+
 Fastify plugin to manage [Mosquitto Dynamic Security](https://mosquitto.org/documentation/dynamic-security/) over MQTT.
 
 Decorates your Fastify instance with `dynsec` (for administration of clients, roles, groups, and ACLs) and `mqtt` (the underlying MQTT client).
