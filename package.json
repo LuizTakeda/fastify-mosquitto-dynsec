@@ -52,6 +52,9 @@
     "typescript": "^7.0.2"
   },
   "peerDependencies": {
-    "fastify": "^5.12.5"
+    "fastify": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

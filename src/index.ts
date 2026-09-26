@@ -30,6 +30,8 @@ export type {
   SetClientPasswordPayload,
   AddClientRolePayload,
   RemoveClientRolePayload,
+  AddClientToGroupPayload,
+  RemoveClientFromGroupPayload,
   ClientDetails,
   GetClientData,
   ListClientsData,
@@ -140,8 +142,23 @@ const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify,
 
   if (options.failFast && !mqttClient.connected) {
     await new Promise<void>((resolve, reject) => {
-      mqttClient.once('connect', () => resolve());
-      mqttClient.once('error', (err) => reject(err));
+      const onConnect = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (err: Error) => {
+        cleanup();
+        if (!options.mqttClient) {
+          mqttClient.end(true);
+        }
+        reject(err);
+      };
+      const cleanup = () => {
+        mqttClient.removeListener("connect", onConnect);
+        mqttClient.removeListener("error", onError);
+      };
+      mqttClient.once("connect", onConnect);
+      mqttClient.once("error", onError);
     });
   }
 
