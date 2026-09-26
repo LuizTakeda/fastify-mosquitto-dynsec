@@ -303,4 +303,61 @@ test("plugin-mock", { concurrency: 1 }, async (t) => {
 
     await app.close();
   });
+
+  await t.test("should subscribe to response topic immediately if mqttClient is already connected", async () => {
+    const app = Fastify();
+    let subscribedTopic: string | null = null;
+    const mockClient = createMockMqttClient({
+      connected: true,
+      subscribe: (topic: string, cb?: (err?: Error) => void) => {
+        subscribedTopic = topic;
+        if (cb) cb();
+        return mockClient;
+      },
+    });
+
+    await app.register(dynsecPlugin, {
+      url: "mqtt://localhost:1883",
+      mqttClient: mockClient,
+    });
+    await app.ready();
+
+    assert.strictEqual(subscribedTopic, "$CONTROL/dynamic-security/v1/response");
+    await app.close();
+  });
+
+  await t.test("should respect custom maxQueueSize option", async () => {
+    const app = Fastify();
+    const mockClient = createMockMqttClient({
+      publish: () => {
+        // Deliberately do not trigger callback/response so task remains pending
+        return mockClient;
+      },
+    });
+
+    await app.register(dynsecPlugin, {
+      url: "mqtt://localhost:1883",
+      mqttClient: mockClient,
+      maxQueueSize: 1,
+    });
+    await app.ready();
+
+    // 1st task starts executing
+    app.dynsec.sendCommands({ commands: [] }).catch(() => {});
+    // 2nd task fills the pending queue (queue length = 1)
+    app.dynsec.sendCommands({ commands: [] }).catch(() => {});
+
+    // 3rd task exceeds maxQueueSize (1) and should immediately reject
+    await assert.rejects(
+      async () => {
+        await app.dynsec.sendCommands({ commands: [] });
+      },
+      {
+        name: "Error",
+        message: "Max queue size reached",
+      }
+    );
+
+    await app.close();
+  });
 });

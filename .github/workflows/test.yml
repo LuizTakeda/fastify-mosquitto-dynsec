@@ -30,7 +30,13 @@ jobs:
           cache: "pnpm"
 
       - name: Start Mosquitto Broker
-        run: docker compose up -d
+        run: |
+          docker compose up -d
+          until docker compose exec -T mosquitto mosquitto_ctrl dynsec listRoles admin admin123456789 > /dev/null 2>&1; do
+            echo "Waiting for Mosquitto DynSec broker to be ready..."
+            sleep 1
+          done
+          echo "Mosquitto DynSec broker is ready!"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

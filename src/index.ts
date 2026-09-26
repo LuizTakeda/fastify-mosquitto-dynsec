@@ -1,6 +1,6 @@
-import fastify, { FastifyPluginAsync } from "fastify";
-import fp from "fastify-plugin"
-import mqtt, { MqttClient } from "mqtt"
+import { FastifyPluginAsync } from "fastify";
+import fp from "fastify-plugin";
+import mqtt, { MqttClient } from "mqtt";
 import { TaskQueue } from "./task-queue.js";
 import { createRoleAPI } from "./role.js";
 import { createGroupAPI } from "./group.js";
@@ -9,12 +9,74 @@ import { createAclAPI } from "./acl.js";
 
 export { DynsecError } from "./errors.js";
 
+export type {
+  DefaultACLType,
+  DefaultACLRule,
+  SetDefaultACLAccessPayload,
+  GetDefaultACLAccessData,
+} from "./acl.js";
+
+export type {
+  ClientRole,
+  ClientGroup,
+  CreateClientPayload,
+  RemoveClientPayload,
+  EnableClientPayload,
+  DisableClientPayload,
+  GetClientPayload,
+  ListClientsPayload,
+  ModifyClientPayload,
+  SetClientIdPayload,
+  SetClientPasswordPayload,
+  AddClientRolePayload,
+  RemoveClientRolePayload,
+  ClientDetails,
+  GetClientData,
+  ListClientsData,
+} from "./client.js";
+
+export type {
+  GroupRole,
+  GroupClient,
+  CreateGroupPayload,
+  GetGroupPayload,
+  ListGroupsPayload,
+  ModifyGroupPayload,
+  RemoveGroupPayload,
+  AddGroupClientPayload,
+  RemoveGroupClientPayload,
+  AddGroupRolePayload,
+  RemoveGroupRolePayload,
+  SetAnonymousGroupPayload,
+  GroupDetails,
+  GetGroupData,
+  ListGroupsData,
+  GetAnonymousGroupData,
+} from "./group.js";
+
+export type {
+  ACLType,
+  RoleACL,
+  CreateRolePayload,
+  GetRolePayload,
+  ListRolesPayload,
+  ModifyRolePayload,
+  RemoveRolePayload,
+  AddRoleACLPayload,
+  RemoveRoleACLPayload,
+  RoleDetails,
+  GetRoleData,
+  ListRolesData,
+} from "./role.js";
+
+export type { DynSecCommandResponse } from "./common.js";
+
 const CMD_TOPIC = "$CONTROL/dynamic-security/v1";
 const RESP_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
 export type SendCommandsFunction = <T = unknown>(commands: object) => Promise<T>;
 
-type DynsecAPI = {
+export type DynsecAPI = {
   sendCommands: SendCommandsFunction;
   role: ReturnType<typeof createRoleAPI>;
   group: ReturnType<typeof createGroupAPI>;
@@ -22,19 +84,20 @@ type DynsecAPI = {
   acl: ReturnType<typeof createAclAPI>;
 };
 
-type MosquittoDynsecPluginOptions = {
-  url: string,
-  adminName?: string,
-  adminPassword?: string,
-  clientId?: string,
-  reconnectPeriod?: number,
-  failFast?: boolean,
-  mqttClient?: MqttClient,
-  commandResponseTimeout?: number,
-}
+export type MosquittoDynsecPluginOptions = {
+  url: string;
+  adminName?: string;
+  adminPassword?: string;
+  clientId?: string;
+  reconnectPeriod?: number;
+  failFast?: boolean;
+  mqttClient?: MqttClient;
+  commandResponseTimeout?: number;
+  maxQueueSize?: number;
+};
 
 const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify, options) => {
-  const taskQueue = new TaskQueue();
+  const taskQueue = new TaskQueue(options.maxQueueSize);
 
   const logger = fastify.log.child({ name: "dynsec" });
 
@@ -54,15 +117,22 @@ const plugin: FastifyPluginAsync<MosquittoDynsecPluginOptions> = async (fastify,
     }
   });
 
-  mqttClient.on("connect", () => {
-    logger.info("connected to MQTT broker");
-
+  const subscribeToResponseTopic = () => {
     mqttClient.subscribe(RESP_TOPIC, (err) => {
       if (err) {
         logger.error({ err }, "Failed to subscribe to response topic");
       }
     });
-  })
+  };
+
+  if (mqttClient.connected) {
+    subscribeToResponseTopic();
+  }
+
+  mqttClient.on("connect", () => {
+    logger.info("connected to MQTT broker");
+    subscribeToResponseTopic();
+  });
 
   mqttClient.on("error", (err) => {
     logger.error({ err }, "MQTT client encountered an error");
