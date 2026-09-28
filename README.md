@@ -1,7 +1,7 @@
 # fastify-mosquitto-dynsec
 
 [![npm version](https://img.shields.io/npm/v/fastify-mosquitto-dynsec.svg?style=flat)](https://www.npmjs.com/package/fastify-mosquitto-dynsec)
-[![npm downloads](https://img.shields.io/npm/dm/fastify-mosquitto-dynsec.svg?style=flat)](https://www.npmjs.com/package/fastify-mosquitto-dynsec)
+[![npm downloads](https://img.shields.io/npm/dt/fastify-mosquitto-dynsec.svg?style=flat)](https://www.npmjs.com/package/fastify-mosquitto-dynsec)
 [![CI Tests](https://github.com/LuizTakeda/fastify-mosquitto-dynsec/actions/workflows/test.yml/badge.svg)](https://github.com/LuizTakeda/fastify-mosquitto-dynsec/actions)
 [![license](https://img.shields.io/github/license/LuizTakeda/fastify-mosquitto-dynsec.svg?style=flat)](./LICENSE)
 
